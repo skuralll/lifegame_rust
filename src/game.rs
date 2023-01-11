@@ -28,6 +28,16 @@ impl Board {
         Board{cells: cells, width: width, height: height}
     }
 
+    //指定の座標のセルを取得する
+    pub fn get_cell(&self, x: i32, y: i32) -> Option<&cell> {
+        if let Some(cell) = self.cells.get( (x + y*self.width) as usize) {  
+            Some(&cell)
+        }
+        else{
+            None
+        }
+    }
+
     // 1ステップ進める
     pub fn step(){
 

@@ -132,7 +132,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     };
     let paragraph = Paragraph::new(text.clone())
         .style(Style::default())
-        .block(create_block("Left, no wrap"))
+        .block(create_block("life game"))
         .alignment(Alignment::Left);
     f.render_widget(paragraph, chunks[0]);
 }
