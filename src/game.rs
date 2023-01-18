@@ -1,11 +1,17 @@
 //セル
 #[derive(Debug, Clone)]
-pub struct cell {
+pub struct Cell {
     // 座標
     x: i32,
     y: i32,
     // 生死
     value: bool,
+}
+
+impl Cell {
+    pub fn is_alive(&self) -> bool {
+        self.value
+    }
 }
 
 //盤面
@@ -15,7 +21,7 @@ pub struct Board{
     height: i32,
     // セルを格納するベクタ
     
-    cells: Vec<cell>,
+    cells: Vec<Cell>,
 }
 
 const AROUND_POS: [(i32, i32); 8] = [
@@ -35,16 +41,21 @@ impl Board {
         let mut cells = Vec::new();
         for y in 0..height {
             for x in 0..width {
-                cells.push(cell{x: x, y: y, value: false});
+                cells.push(Cell{x: x, y: y, value: false});
             }
         }
         Self {cells: cells, width: width, height: height}
     }
 
+    //盤面のサイズを取得する
+    pub fn get_size(&self) -> (i32, i32){
+        (self.width, self.height)
+    }
+
     // 指定の座標のセルを取得する
-    pub fn get_cell(&self, x: i32, y: i32) -> Option<&cell> {
+    pub fn get_cell(&self, x: i32, y: i32) -> Option<&Cell> {
         //両端を繋げないための処理
-        if 0 > x && x >= self.width {
+        if x < 0 || x >= self.width {
             return None;
         }
         //セルが存在していれば返す
@@ -56,9 +67,23 @@ impl Board {
         }
     }
 
+    //セルの生死を変更する
+    pub fn set_cell(&mut self, x: i32, y: i32, value: bool){
+        if let Some(cell) = self.cells.get_mut((x + y*self.width) as usize){
+            cell.value = value;
+        }
+    }
+
+    //セルの生死を反転させる
+    pub fn toggle_cell(&mut self, x: i32, y: i32){
+        if let Some(cell) = self.cells.get_mut((x + y*self.width) as usize){
+            cell.value = !cell.value;
+        }
+    }
+
     // 1ステップ進める
     pub fn step(&mut self){
-        let mut after_cells: Vec<cell> =self.cells.to_vec(); // 処理終了後のVector
+        let mut after_cells: Vec<Cell> =self.cells.to_vec(); // 処理終了後のVector
         for cell in self.cells.iter(){
             //周りの生存セル数をカウントする
             let mut around_count = 0;
@@ -82,6 +107,6 @@ impl Board {
             }
         }
         // cellsをaftercellに置き換える
-        self.cells = after_cells; 
+        self.cells = after_cells;
     }
 }
