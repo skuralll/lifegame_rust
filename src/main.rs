@@ -31,7 +31,8 @@ struct App<'a> {
 	board: game::Board, // ゲーム盤
 	pub titles: Vec<&'a str>, // モードのタイトルリスト
 	pub mode: usize, // モード
-	pub selected_cell: (i32, i32) // 選択されているセル
+	pub selected_cell: (i32, i32), // 選択されているセル
+	pub running: bool // 実行中かどうか
 }
 impl <'a> App<'a>  {
 	fn new() -> App<'a> {
@@ -39,19 +40,21 @@ impl <'a> App<'a>  {
 			titles: vec!["Run", "Edit"],
 			board: game::Board::new(30, 30),
 			mode: 0,
-			selected_cell: (0, 0)
+			selected_cell: (0, 0),
+			running: false,
 		}
 	}
 
 	fn on_tick(&mut self) {
-		if self.mode == Mode::Run as usize {
+		if self.running {
 			self.board.step();
 		}
 	}
 
 	// モードを変更する
 	pub fn mode_change(&mut self){
-		self.mode = (self.mode + 1) % self.titles.len();
+		self.mode = (self.mode + 1) % self.titles.len(); // モード変更
+		self.running = false; // 実行停止
 	}
 
 	// カーソルを動かす
@@ -82,7 +85,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let mut terminal = Terminal::new(backend)?;
 
 	// App構造体を作成してアプリケーションを実行
-	let tick_rate = Duration::from_millis(250);
+	let tick_rate = Duration::from_millis(100);
 	let app = App::new();
 	let res = run_app(&mut terminal, app, tick_rate);
 
@@ -128,6 +131,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App, tick_rate: Dura
 					// 決定
 					KeyCode::Char(' ') => {
 						if app.mode == Mode::Edit as usize {app.toggle_selected_cell();} // Editモード時: セルの生死を切り替える
+						else if app.mode == Mode::Run as usize { // Runモード時
+							app.running = !app.running; // 実行開始/停止
+						}
 					},
 					_ => {}
 				}
@@ -221,13 +227,16 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
 	// 操作方法の表示
     let mut usage_texts: Vec<Spans> = vec![
+		Spans::from("Q     : Quit"), // 共通
 		Spans::from("Tab   : Change Mode"), // 共通
 	];
 	if app.mode == Mode::Edit as usize {
-		usage_texts.push(Spans::from("←↑→↓  : Move Cursor")); // Editモード時
+		// Editモード時
+		usage_texts.push(Spans::from("←↑→↓  : Move Cursor")); 
 		usage_texts.push(Spans::from("Space : Toggle Cell Status"));
 	}else if app.mode == Mode::Run as usize {
-		// todo
+		// Runモード時
+		usage_texts.push(Spans::from("Space : Run/Stop")); 
 	}
 
     let usage_paragraph = Paragraph::new(usage_texts.clone())
